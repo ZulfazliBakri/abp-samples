@@ -1,22 +1,26 @@
 ﻿using System;
 using System.Net.Http;
 using Blazorise;
-using Blazorise.Bootstrap;
+using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
 using IdentityModel;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp;
+using Volo.Abp.AspNetCore.Components.Web.BasicTheme.Themes.Basic;
+using Volo.Abp.AspNetCore.Components.Web.Theming.Routing;
 using Volo.Abp.AspNetCore.Components.WebAssembly.BasicTheme;
 using Volo.Abp.AspNetCore.Components.WebAssembly.BasicTheme.Themes.Basic;
-using Volo.Abp.AspNetCore.Components.WebAssembly.Theming.Routing;
 using Volo.Abp.Autofac.WebAssembly;
 using Volo.Abp.Modularity;
 using Volo.Abp.UI.Navigation;
 using Volo.Abp.Identity.Blazor;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.Identity.Blazor.WebAssembly;
+using Volo.Abp.SettingManagement.Blazor.WebAssembly;
 using Volo.Abp.TenantManagement.Blazor;
+using Volo.Abp.TenantManagement.Blazor.WebAssembly;
 
 namespace DevExpressSample.Blazor
 {
@@ -24,8 +28,9 @@ namespace DevExpressSample.Blazor
         typeof(AbpAutofacWebAssemblyModule),
         typeof(DevExpressSampleHttpApiClientModule),
         typeof(AbpAspNetCoreComponentsWebAssemblyBasicThemeModule),
-        typeof(AbpIdentityBlazorModule),
-        typeof(AbpTenantManagementBlazorModule)
+        typeof(AbpIdentityBlazorWebAssemblyModule),
+        typeof(AbpTenantManagementBlazorWebAssemblyModule),
+        typeof(AbpSettingManagementBlazorWebAssemblyModule)
     )]
     public class DevExpressSampleBlazorModule : AbpModule
     {
@@ -42,7 +47,7 @@ namespace DevExpressSample.Blazor
             ConfigureMenu(context);
             ConfigureAutoMapper(context);
 
-            builder.Services.AddDevExpressBlazor();
+            builder.Services.AddDevExpressBlazor(configure => configure.BootstrapVersion = DevExpress.Blazor.BootstrapVersion.v5);
         }
 
         private void ConfigureRouter(ServiceConfigurationContext context)
@@ -64,7 +69,7 @@ namespace DevExpressSample.Blazor
         private void ConfigureBlazorise(ServiceConfigurationContext context)
         {
             context.Services
-                .AddBootstrapProviders()
+                .AddBootstrap5Providers()
                 .AddFontAwesomeIcons();
         }
 

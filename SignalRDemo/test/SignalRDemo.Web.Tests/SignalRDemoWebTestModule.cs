@@ -30,7 +30,7 @@ namespace SignalRDemo
         {
             context.Services.PreConfigure<IMvcBuilder>(builder =>
             {
-                builder.PartManager.ApplicationParts.Add(new AssemblyPart(typeof(SignalRDemoWebModule).Assembly));
+                builder.PartManager.ApplicationParts.Add(new CompiledRazorAssemblyPart(typeof(SignalRDemoWebModule).Assembly));
             });
         }
 
@@ -87,7 +87,7 @@ namespace SignalRDemo
                 }
             });
 
-            app.UseVirtualFiles();
+            app.UseStaticFiles();
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();

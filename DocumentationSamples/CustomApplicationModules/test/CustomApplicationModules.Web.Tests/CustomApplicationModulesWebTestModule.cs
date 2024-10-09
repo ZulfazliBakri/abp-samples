@@ -30,7 +30,7 @@ namespace CustomApplicationModules
         {
             context.Services.PreConfigure<IMvcBuilder>(builder =>
             {
-                builder.PartManager.ApplicationParts.Add(new AssemblyPart(typeof(CustomApplicationModulesWebModule).Assembly));
+                builder.PartManager.ApplicationParts.Add(new CompiledRazorAssemblyPart(typeof(CustomApplicationModulesWebModule).Assembly));
             });
         }
 
@@ -87,7 +87,7 @@ namespace CustomApplicationModules
                 }
             });
 
-            app.UseVirtualFiles();
+            app.UseStaticFiles();
             app.UseRouting();          
             app.UseAuthentication();
             app.UseAbpRequestLocalization();

@@ -1,64 +1,118 @@
 ﻿using Acme.BookStore.Authors;
 using Acme.BookStore.Books;
 using Microsoft.EntityFrameworkCore;
-using Acme.BookStore.Users;
+using Volo.Abp.AuditLogging.EntityFrameworkCore;
+using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
 using Volo.Abp.Data;
+using Volo.Abp.DependencyInjection;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore.Modeling;
+using Volo.Abp.FeatureManagement.EntityFrameworkCore;
 using Volo.Abp.Identity;
-using Volo.Abp.Users.EntityFrameworkCore;
+using Volo.Abp.Identity.EntityFrameworkCore;
+using Volo.Abp.OpenIddict.EntityFrameworkCore;
+using Volo.Abp.PermissionManagement.EntityFrameworkCore;
+using Volo.Abp.SettingManagement.EntityFrameworkCore;
+using Volo.Abp.TenantManagement;
+using Volo.Abp.TenantManagement.EntityFrameworkCore;
 
-namespace Acme.BookStore.EntityFrameworkCore
+namespace Acme.BookStore.EntityFrameworkCore;
+
+[ReplaceDbContext(typeof(IIdentityDbContext))]
+[ReplaceDbContext(typeof(ITenantManagementDbContext))]
+[ConnectionStringName("Default")]
+public class BookStoreDbContext :
+    AbpDbContext<BookStoreDbContext>,
+    IIdentityDbContext,
+    ITenantManagementDbContext
 {
-    /* This is your actual DbContext used on runtime.
-     * It includes only your entities.
-     * It does not include entities of the used modules, because each module has already
-     * its own DbContext class. If you want to share some database tables with the used modules,
-     * just create a structure like done for AppUser.
+    /* Add DbSet properties for your Aggregate Roots / Entities here. */
+
+    #region Entities from the modules
+
+    /* Notice: We only implemented IIdentityDbContext and ITenantManagementDbContext
+     * and replaced them for this DbContext. This allows you to perform JOIN
+     * queries for the entities of these modules over the repositories easily. You
+     * typically don't need that for other modules. But, if you need, you can
+     * implement the DbContext interface of the needed module and use ReplaceDbContext
+     * attribute just like IIdentityDbContext and ITenantManagementDbContext.
      *
-     * Don't use this DbContext for database migrations since it does not contain tables of the
-     * used modules (as explained above). See BookStoreMigrationsDbContext for migrations.
+     * More info: Replacing a DbContext of a module ensures that the related module
+     * uses this DbContext on runtime. Otherwise, it will use its own DbContext class.
      */
-    [ConnectionStringName("Default")]
-    public class BookStoreDbContext : AbpDbContext<BookStoreDbContext>
+
+    //Identity
+    public DbSet<IdentityUser> Users { get; set; }
+    public DbSet<IdentityRole> Roles { get; set; }
+    public DbSet<IdentityClaimType> ClaimTypes { get; set; }
+    public DbSet<OrganizationUnit> OrganizationUnits { get; set; }
+    public DbSet<IdentitySecurityLog> SecurityLogs { get; set; }
+    public DbSet<IdentityLinkUser> LinkUsers { get; set; }
+    public DbSet<IdentityUserDelegation> UserDelegations { get; set; }
+    public DbSet<IdentitySession> Sessions { get; set; }
+    // Tenant Management
+    public DbSet<Tenant> Tenants { get; set; }
+    public DbSet<TenantConnectionString> TenantConnectionStrings { get; set; }
+
+    #endregion
+
+    public DbSet<Book> Books { get; set; }
+
+    public DbSet<Author> Authors { get; set; }
+
+    public BookStoreDbContext(DbContextOptions<BookStoreDbContext> options)
+        : base(options)
     {
-        public DbSet<Author> Authors { get; set; }
 
-        public DbSet<Book> Books { get; set; }
+    }
 
-        public DbSet<AppUser> Users { get; set; }
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
 
-        /* Add DbSet properties for your Aggregate Roots / Entities here.
-         * Also map them inside BookStoreDbContextModelCreatingExtensions.ConfigureBookStore
-         */
+        /* Include modules to your migration db context */
 
-        public BookStoreDbContext(DbContextOptions<BookStoreDbContext> options)
-            : base(options)
+        builder.ConfigurePermissionManagement();
+        builder.ConfigureSettingManagement();
+        builder.ConfigureBackgroundJobs();
+        builder.ConfigureAuditLogging();
+        builder.ConfigureIdentity();
+        builder.ConfigureOpenIddict();
+        builder.ConfigureFeatureManagement();
+        builder.ConfigureTenantManagement();
+
+        builder.Entity<Book>(b =>
         {
+            b.ToTable(BookStoreConsts.DbTablePrefix + "Books", BookStoreConsts.DbSchema);
+            b.ConfigureByConvention(); //auto configure for the base class props
+            b.Property(x => x.Name).IsRequired().HasMaxLength(128);
 
-        }
+            // ADD THE MAPPING FOR THE RELATION
+            b.HasOne<Author>().WithMany().HasForeignKey(x => x.AuthorId).IsRequired();
+        });
 
-        protected override void OnModelCreating(ModelBuilder builder)
+        builder.Entity<Author>(b =>
         {
-            base.OnModelCreating(builder);
+            b.ToTable(BookStoreConsts.DbTablePrefix + "Authors",
+                BookStoreConsts.DbSchema);
 
-            /* Configure the shared tables (with included modules) here */
+            b.ConfigureByConvention();
 
-            builder.Entity<AppUser>(b =>
-            {
-                b.ToTable(AbpIdentityDbProperties.DbTablePrefix + "Users"); //Sharing the same table "AbpUsers" with the IdentityUser
+            b.Property(x => x.Name)
+                .IsRequired()
+                .HasMaxLength(AuthorConsts.MaxNameLength);
 
-                b.ConfigureByConvention();
-                b.ConfigureAbpUser();
+            b.HasIndex(x => x.Name);
+        });
 
-                /* Configure mappings for your additional properties
-                 * Also see the BookStoreEfCoreEntityExtensionMappings class
-                 */
-            });
 
-            /* Configure your own tables/entities inside the ConfigureBookStore method */
+        /* Configure your own tables/entities inside here */
 
-            builder.ConfigureBookStore();
-        }
+        //builder.Entity<YourEntity>(b =>
+        //{
+        //    b.ToTable(BookStoreConsts.DbTablePrefix + "YourEntities", BookStoreConsts.DbSchema);
+        //    b.ConfigureByConvention(); //auto configure for the base class props
+        //    //...
+        //});
     }
 }

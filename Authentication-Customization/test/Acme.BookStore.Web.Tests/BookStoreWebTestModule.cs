@@ -30,7 +30,7 @@ namespace Acme.BookStore
         {
             context.Services.PreConfigure<IMvcBuilder>(builder =>
             {
-                builder.PartManager.ApplicationParts.Add(new AssemblyPart(typeof(BookStoreWebModule).Assembly));
+                builder.PartManager.ApplicationParts.Add(new CompiledRazorAssemblyPart(typeof(BookStoreWebModule).Assembly));
             });
         }
 
@@ -87,7 +87,7 @@ namespace Acme.BookStore
                 }
             });
 
-            app.UseVirtualFiles();
+            app.UseStaticFiles();
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();

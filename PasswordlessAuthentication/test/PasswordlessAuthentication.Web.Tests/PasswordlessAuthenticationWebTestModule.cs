@@ -30,7 +30,7 @@ namespace PasswordlessAuthentication
         {
             context.Services.PreConfigure<IMvcBuilder>(builder =>
             {
-                builder.PartManager.ApplicationParts.Add(new AssemblyPart(typeof(PasswordlessAuthenticationWebModule).Assembly));
+                builder.PartManager.ApplicationParts.Add(new CompiledRazorAssemblyPart(typeof(PasswordlessAuthenticationWebModule).Assembly));
             });
         }
 
@@ -87,7 +87,7 @@ namespace PasswordlessAuthentication
                 }
             });
 
-            app.UseVirtualFiles();
+            app.UseStaticFiles();
             app.UseRouting();          
             app.UseAuthentication();
             app.UseAbpRequestLocalization();

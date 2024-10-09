@@ -30,7 +30,7 @@ namespace DevExtremeSample
         {
             context.Services.PreConfigure<IMvcBuilder>(builder =>
             {
-                builder.PartManager.ApplicationParts.Add(new AssemblyPart(typeof(DevExtremeSampleWebModule).Assembly));
+                builder.PartManager.ApplicationParts.Add(new CompiledRazorAssemblyPart(typeof(DevExtremeSampleWebModule).Assembly));
             });
         }
 
@@ -87,7 +87,7 @@ namespace DevExtremeSample
                 }
             });
 
-            app.UseVirtualFiles();
+            app.UseStaticFiles();
             app.UseRouting();          
             app.UseAuthentication();
             app.UseAbpRequestLocalization();
